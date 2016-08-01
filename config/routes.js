@@ -34,6 +34,7 @@ module.exports.routes = {
 
   '/':'HomeController.index',
   'post /Register':'HomeController.registerUser',
+  'get /GetUserBids' :'HomeController.getUserBids',
   'post /AddBid':'HomeController.saveBid',
 
   '/Auction':'HomeController.auction',

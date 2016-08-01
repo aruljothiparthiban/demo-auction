@@ -55,7 +55,8 @@
             <div class="jumbotron" >
                 <%if (typeof user!=='undefined') { %>
                 <div class="row">
-                    <p class="pull-right">Auction Closes on : <span class="text-danger"><%- user.auctionExpiresOn %></span></p>
+                    <input type="hidden" id="event_timestamp" value="<%- user.auctionExpiresOn %>">
+                    <p class="pull-right" id="expire_on"></p>
                 </div>
                 <% } %>
                 <div id="root" class="row"></div>

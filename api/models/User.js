@@ -26,8 +26,7 @@ module.exports = {
         	required:true
         },
         country:{
-        	type :'string',
-        	required:true
+        	type :'string'
         },
         continent:{
         	type:'string'

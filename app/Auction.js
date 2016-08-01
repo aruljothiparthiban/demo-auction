@@ -1,34 +1,178 @@
 import React from 'react';
+import moment from 'moment';
+import update from 'immutability-helper';
+
+class SubmitButton extends React.Component{
+	constructor(args){
+		super(args);
+	}
+
+	render(){
+
+		if(this.props.bid.Submited){
+			if(this.props.bid.Success){
+				return (
+					<div className="col-xs-5">
+						<span className="text-success">Congratulations, You WON this Deal for ${this.props.bid.Value}</span>
+					</div>
+				);
+			}
+			else
+			{
+				return (
+					<div className="col-xs-5">
+						<span className="text-success">Bid submitted successfully</span>
+					</div>
+				);
+			}			
+		}
+		else if(this.props.bid.IsLost){
+			return (
+				<div className="col-xs-5">
+					<span className="text-danger">You lost this deal !</span>
+				</div>
+			);
+		}
+		else{
+			return (
+				<div className="col-xs-5">
+					<button 
+						type="button" 
+						onClick={this.props.submit} 
+						className="btn btn-primary">Submit Bid</button>				
+				</div>
+			);
+		}
+	}
+}
 
 class Auction extends React.Component{
 
 	constructor(args){
 		super(args);
+
 		this.state = {
-			Deal1 :''
+			Deal1:{
+				Id:0,
+				Value:'',
+				Submited:false,
+				IsLost : false,
+				Success : false
+			},
+			Deal2:{
+				Id:0,
+				Value:'',
+				Submited:false,
+				IsLost : false,
+				Success : false
+			},
+			Deal3:{
+				Id:0,
+				Value:'',
+				Submited:false,
+				IsLost : false,
+				Success : false
+			},
+			Deal4:{
+				Id:0,
+				Value:'',
+				Submited:false,
+				IsLost : false,
+				Success : false
+			},
+			Deal5:{
+				Id:0,
+				Value:'',
+				Submited:false,
+				IsLost : false,
+				Success : false
+			}
 		};
 	}
 
 	setValue(field,e){
-		var obj = {};
-		obj[field] = e.target.value;
-		this.setState(obj);
+		var bid = this.state[field];
+		bid.Value = e.target.value;
+		bid.Submited = false;
+		bid.IsLost = false;
+		var newState = this.state;
+		this.setState(newState);
 	}
 
-	onSubmit (e){
-		e.preventDefault();
-		var model = {
-			email : this.state.Email,
-			password : this.state.CompanyName
-		};
-		io.socket.post('/Register', model, function (resData, jwres) {
-			if(jwres.statusCode===200){
-				window.location.href='/Auction';
-			}
-			else{
-				console.log(resData);
-				console.log(jwres);
-			}
+	onSubmit (field,e){
+		
+		var bid = this.state[field];
+		var bidConfirmed = confirm('Are you sure you would like to submit the bid ?');
+		if(bidConfirmed){
+			var newState = this.state;
+			var _this = this;
+			io.socket.post('/AddBid',{
+				id : bid.Id,
+				bidAmount : bid.Value
+			}, function (resData, jwres) {
+				if(jwres.statusCode===200){
+					bid.Submited = true;
+					bid.Id = resData.id;
+					_this.setState(newState);
+				}
+				else{
+					alert(resData.message);
+				}
+			});
+		}
+	}
+
+	componentDidMount(){
+		var _this = this;
+		var dom = document.getElementById('expire_on');
+		var eventTimeStamp = document.getElementById('event_timestamp');
+		var times = eventTimeStamp.value.split('|');
+		if(times.length==2){
+			var eventTime= Number(times[0]);
+			var currentTime = Number(times[1]);
+
+			var timeDiff = moment(eventTime).toDate().getTime() - moment(currentTime).toDate().getTime();
+			var interval = 1000;
+
+			var intervalRef =	setInterval(function(){
+				timeDiff  = timeDiff - interval;
+				if(timeDiff<=0){
+					clearInterval(intervalRef);
+					dom.innerHTML ='Bidding Closed';
+					var stateBackup = _this.state;
+					for(var key in stateBackup){
+						var item = stateBackup[key];
+						if(!item.Submited){
+							item.IsLost = true;
+						}
+						else{
+							item.Success = true;
+						}
+					}
+					_this.setState(stateBackup);
+				}
+				else{
+	  				var time = moment.duration(timeDiff, 'milliseconds');
+	  				dom.innerHTML ='Auction Closes in : <span class="text-danger">'+time.minutes() + ":" + time.seconds()+'</span>';
+	  			}
+			}, interval);
+		}
+
+		
+		// get user
+		var socket = io.sails.connect();
+		var idIndex = 1;
+		var stateObj = {};
+		socket.get('/GetUserBids',function(bids){
+			bids.forEach(function(bid){
+				stateObj['Deal'+idIndex] = {
+					Id : bid.id,
+					Value: bid.bidAmount,
+					Submited : true
+				}
+				idIndex++;
+			});	
+			_this.setState(stateObj);		
 		});
 	}
 
@@ -48,13 +192,11 @@ class Auction extends React.Component{
 										type="number" 
 										id="Deal1"
 										className="form-control" 
-										value={this.state.Deal1}
+										value={this.state.Deal1.Value}
 										onChange={this.setValue.bind(this,'Deal1')}  />
 								</div>
 							</div>
-							<div className="col-xs-5">
-								<button type="button" className="btn btn-primary">Submit Bid</button>
-							</div>
+							<SubmitButton submit={this.onSubmit.bind(this,'Deal1')} bid={this.state.Deal1} />
 						</div>
 
 						<div className="form-group row">
@@ -68,13 +210,11 @@ class Auction extends React.Component{
 										type="number" 
 										id="Deal2"
 										className="form-control" 
-										value={this.state.Deal2}
+										value={this.state.Deal2.Value}
 										onChange={this.setValue.bind(this,'Deal2')}  />
 								</div>
 							</div>
-							<div className="col-xs-5">
-								<button type="button" className="btn btn-primary">Submit Bid</button>
-							</div>
+							<SubmitButton submit={this.onSubmit.bind(this,'Deal2')} bid={this.state.Deal2} />
 						</div>
 
 						<div className="form-group row">
@@ -88,13 +228,11 @@ class Auction extends React.Component{
 										type="number" 
 										id="Deal3"
 										className="form-control" 
-										value={this.state.Deal3}
+										value={this.state.Deal3.Value}
 										onChange={this.setValue.bind(this,'Deal3')}  />
 								</div>
 							</div>
-							<div className="col-xs-5">
-								<button type="button" className="btn btn-primary">Submit Bid</button>
-							</div>
+							<SubmitButton submit={this.onSubmit.bind(this,'Deal3')} bid={this.state.Deal3} />
 						</div>
 
 						<div className="form-group row">
@@ -108,13 +246,11 @@ class Auction extends React.Component{
 										type="number" 
 										id="Deal4"
 										className="form-control" 
-										value={this.state.Deal4}
+										value={this.state.Deal4.Value}
 										onChange={this.setValue.bind(this,'Deal4')}  />
 								</div>
 							</div>
-							<div className="col-xs-5">
-								<button type="button" className="btn btn-primary">Submit Bid</button>
-							</div>
+							<SubmitButton submit={this.onSubmit.bind(this,'Deal4')} bid={this.state.Deal4} />
 						</div>
 
 						<div className="form-group row">
@@ -128,13 +264,11 @@ class Auction extends React.Component{
 										type="number" 
 										id="Deal5"
 										className="form-control" 
-										value={this.state.Deal5}
+										value={this.state.Deal5.Value}
 										onChange={this.setValue.bind(this,'Deal5')}  />
 								</div>
 							</div>
-							<div className="col-xs-5">
-								<button type="button" className="btn btn-primary">Submit Bid</button>
-							</div>
+							<SubmitButton submit={this.onSubmit.bind(this,'Deal5')} bid={this.state.Deal5} />
 						</div>
 					</div>
 				</form>

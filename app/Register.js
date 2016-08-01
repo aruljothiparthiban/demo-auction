@@ -22,15 +22,17 @@ class Register extends React.Component{
 		e.preventDefault();
 		var model = {
 			email : this.state.Email,
-			password : this.state.CompanyName
+			companyName : this.state.CompanyName,
+			name : this.state.Name,
+			phoneNumber: this.state.PhoneNumber,
+			id :0
 		};
 		io.socket.post('/Register', model, function (resData, jwres) {
 			if(jwres.statusCode===200){
 				window.location.href='/Auction';
 			}
 			else{
-				console.log(resData);
-				console.log(jwres);
+				alert(resData.message);
 			}
 		});
 	}
