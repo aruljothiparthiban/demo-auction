@@ -15,7 +15,53 @@
 
   <body>
     <%- body %>
-    <div id="root" class="container"></div>
+    <div class="container">
+        <div class="row">
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                  <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                      <span class="sr-only">Toggle navigation</span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/#">Demo Auction</a>
+                  </div>
+                  <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                      <li><a href="/Auction">Auction</a></li>
+                      <li><a href="/Admin">Admin</a></li>
+                    </ul>
+                    <%if (typeof user!=='undefined') { %>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="/"><%- user.email %></a></li>
+                    </ul>
+                    <% } %>
+                  </div>
+                </div>
+            </nav>
+        </div>
+        <%if (error.length>0) { %>
+            <div class="row">
+                <div class="alert alert-danger">
+                    <strong>Error!</strong> <%- error %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="jumbotron" >
+                <%if (typeof user!=='undefined') { %>
+                <div class="row">
+                    <p class="pull-right">Auction Closes on : <span class="text-danger"><%- user.auctionExpiresOn %></span></p>
+                </div>
+                <% } %>
+                <div id="root" class="row"></div>
+            </div>
+        </div>
+    </div>
 
     <!--TEMPLATES-->
     

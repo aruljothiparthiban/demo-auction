@@ -4,57 +4,99 @@ import {Router , Route, IndexRoute, Link , hashHistory } from 'react-router';
 
 import Register from './Register';
 import Auction from './Auction';
-
-class NavBar extends React.Component{
-
-	render (){
-		return(
-			<nav className="navbar navbar-default">
-		        <div className="container-fluid">
-		          <div className="navbar-header">
-		            <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-		              <span className="sr-only">Toggle navigation</span>
-		              <span className="icon-bar"></span>
-		              <span className="icon-bar"></span>
-		              <span className="icon-bar"></span>
-		            </button>
-		            <a className="navbar-brand" href="\/">Demo Auction</a>
-		          </div>
-		          <div id="navbar" className="navbar-collapse collapse">
-		            <ul className="nav navbar-nav">
-		              <li><a href="#/register">Register</a></li>
-		              <li><a href="#/auction">Auction</a></li>
-		              <li><a href="#/admin">Admin</a></li>
-		            </ul>
-		          </div>
-		        </div>
-      		</nav>
-		);
-	}
-}
+import Admin from './Admin';
 
 class App extends React.Component{
 
+	constructor(args){
+		super(args);
+
+		this.state = {
+			users : []
+		};
+	}
+
+	componentDidMount(){
+		var socket = io.sails.connect();
+		var _this = this;
+		socket.get('/user',function(users){
+			_this.setState({
+				users : users
+			});
+		});	
+
+		socket.on('user', function (result) {
+			if(result.verb==='created'){
+				var users = _this.state.users.slice();
+				users.push(result.data);
+				_this.setState({
+					users : users
+				});
+			}
+			else if(result.verb === 'destroyed'){
+				var users = _this.state.users.slice();
+				users = users.filter(function(p){
+					return p.id !== parseInt(result.id);
+				});
+				_this.setState({
+					users : users
+				});
+			}	
+    	});
+
+    	socket.on('bid', function (result) {
+			if(result.verb==='created'){
+				var users = _this.state.users.slice();
+				users.forEach(function(u){
+					if(u.id === result.data.user){
+						u.bids.push(result.data);
+					}
+				});
+				_this.setState({
+					users : users
+				});
+			}
+			else if(result.verb === 'destroyed'){
+				var users = _this.state.users.slice();
+				users.forEach(function(u){
+					u.bids = u.bids.filter(function(p){
+						return p.id !== parseInt(result.id);
+					});
+				});				
+				_this.setState({
+					users : users
+				});
+			}	
+    	});
+
+		window.socket = socket;
+	}
+
 	render (){
-		return(
-			<div className="row">
-				<NavBar />
-				<div className="jumbotron">
-				{this.props.children}
+		const pathname =window.location.pathname;
+		if(pathname==='/'){
+			return (
+				<div className="row">
+					<Register />
 				</div>
-			</div>
-		);
+			);
+		}
+		else if(pathname==='/Auction'){
+			return (
+				<div className="row">
+					<Auction />
+				</div>
+			);
+		}
+		else if(pathname==='/Admin'){
+			return (
+				<div className="row">
+					<Admin users={this.state.users}/>
+				</div>
+			);
+		}
 	}
 }
 
-render(
-	(
-		<Router history={hashHistory }>
-			<Route path="/" component={App}>
-				<IndexRoute component={Register}/>
-				<Route path="register" component={Register}/>
-				<Route path="auction" component={Auction}/>
-			</Route>
-		</Router>
-	)
-,document.getElementById('root'));
+render(<App />,document.getElementById('root'));
+

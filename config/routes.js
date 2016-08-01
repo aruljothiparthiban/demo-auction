@@ -33,8 +33,13 @@ module.exports.routes = {
   ***************************************************************************/
 
   '/':'HomeController.index',
+  'post /Register':'HomeController.registerUser',
+  'post /AddBid':'HomeController.saveBid',
 
-  '/Auction':'HomeController.auction'
+  '/Auction':'HomeController.auction',
+
+  '/Admin' :'AdminController.index'
+  
 
   /***************************************************************************
   *                                                                          *

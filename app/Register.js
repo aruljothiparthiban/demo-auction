@@ -20,8 +20,19 @@ class Register extends React.Component{
 
 	onSubmit (e){
 		e.preventDefault();
-		console.log(this.state);
-		this.props.history.push('/auction');
+		var model = {
+			email : this.state.Email,
+			password : this.state.CompanyName
+		};
+		io.socket.post('/Register', model, function (resData, jwres) {
+			if(jwres.statusCode===200){
+				window.location.href='/Auction';
+			}
+			else{
+				console.log(resData);
+				console.log(jwres);
+			}
+		});
 	}
 
 	render(){
