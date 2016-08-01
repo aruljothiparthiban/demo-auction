@@ -37,6 +37,7 @@
   },
   "scripts": {
     "debug": "node debug app.js",
+    "build":"webpack --progress",
     "start": "node app.js"
   },
   "main": "app.js",
